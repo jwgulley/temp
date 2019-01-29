@@ -1,0 +1,314 @@
+
+INITIAL NOTES - "SMALL PRINT"
+
+This code is provided in confidence for evaluation and demonstration only.  Hence, it is recommended that it be installed on a stand-alone test machine or VM. Among other reasons, this is because it makes use of third party modules and has been tested informally and to a limited extent. However, internet access is required for the installation/demo.  I request that the installed software be removed when the evaluation is complete.
+
+The design is exploratory in nature and subject to change.
+
+This document is collated from and supersedes individual documents in the source tree.
+
+Documentation in the code-base is partial in places, owing to time constraints. 
+
+
+TEST PLATFORM
+
+Tested on Windows 10 with Python 3.7.2.
+
+
+PROVENANCE
+
+The flaskr application is based on the tutorial for flask of the same name:
+- http://flask.pocoo.org/docs/dev/tutorial/
+- I have made changes to run a pipeline of components and show the results;
+- no attempt has been made to document this code.
+
+In the flaskr/PPL directory resides code I have created:
+- all code in this directory is substantially my own;
+- most (but not all due to time constraints) is documented.
+
+The output of pip freeze in a virtual environment after installation is as follows:
+Click==7.0
+Flask==1.0.2
+flaskr==1.0.0
+itsdangerous==1.1.0
+Jinja2==2.10
+MarkupSafe==1.1.0
+waitress==1.2.1
+Werkzeug==0.14.1
+
+
+
+
+
+INTRODUCTION
+
+The purpose of this software is to develop and demonstrate the concept of pipeline programming using components.
+
+Demonstrations are provided to illustrate a pipeline of components can be used as part of a web service, how the pipeline is developed from components and how the components are developed using libraries to provide infrastructure and facilitate testing.
+
+An appendix gives an overview of some of the key concepts being developed.
+
+
+
+INSTALLATION
+
+Install python 3.7.2.
+
+Create a new dir:
+> mkdir <installDir>
+
+Change directory to the new directory:
+> cd <installDir>
+
+Set up a new virtal environment:
+> py -3 -m venv venv
+
+Activate it:
+> venv\Scripts\activate
+
+Copy the distribution file, flaskr-1.0.0-py3-none-any.whl, to the directory.
+
+Install the distribution:
+> pip install flaskr-1.0.0-py3-none-any.whl
+
+
+APPLICATION LAUNCH
+
+Set up environmental variables as follows:
+> set FLASK_APP=flaskr
+
+Initialise the application database:
+> flask init-db
+
+Install the waitress wsgi server in the virtual environment:
+> pip install waitress
+
+Invoke the waitress to serve the application:
+> waitress-serve --call flaskr:create_app
+
+
+
+
+SCRIPTED WEB APPLICATION DEMO
+
+The first demo tests a pipeline of components operating within a flask web server.
+
+Access the application via the browser at the following web address:
+- http://127.0.0.1:8080/
+
+Register on the site - for example:
+- User: donald 
+- Password: duck
+
+Login on the site:
+- User: donald 
+- Password: duck
+
+Click "new" to create a script:
+- Title:Test
+- Body:  cook None rollupTest.txt data | sort data Church,Area,Item data | rollup data Church,Area;qty data| rollup data Church;qty data | csvToHtml data None data | serve data None None
+
+Click "Save".
+
+On the next screen, click the link "PPL Run".  
+
+This causes the PPL pipeline to run.
+
+The result - a sorted table of Church Accounts with roll-ups - should be be displayed in the window frame below the script and links.
+
+"Logout" of the server.
+
+Stop the server with <ctl-c> in the command window.
+
+
+PIPELINE DEVELOPMENT DEMO
+
+The second demo walks illustrates how a pipeline of components can be developed on a local PC.
+
+Navigate to the pipeline development directory from the installation dir:
+> <installDir>\venv\Lib\site-packages\flaskr\PPL\playpen
+
+Right-click on a .ppl file / select "Open With" / "Choose another app" (select "Always Open...." / "More apps" / "Look for another app on this PC".
+
+Select:
+<installDir>\venv\Lib\site-packages\flaskr\PPL\playpen\ppl.bat
+
+Inspect the *.txt files and remove all but 01.txt (backing up if needed).
+
+Double-click the *.ppl files in numerical order.
+
+The *.txt files should be generated in turn.
+
+This demonstrates components being run in sequence, as would be donw if one were 
+developing and testing a pipeline for eventual use in a web server or other configuration.
+
+
+DEMO OF DEVELOPING / TESTING INDIVIDUAL COMPONENTS AND RUNNING COMPONENT CORES
+
+The final demo takes us to the components themselves, showing how they might be developed and tested in a manner which leverages common infrastructure and test code.
+
+
+Change directory to the components directory:
+> cd <installDir>\venv\Lib\site-packages\flaskr\PPL\components
+
+The following sub-directories contain components whose source can be inspected and which can be run and tested:
+- browse
+- cook
+- sort
+- rollup
+- cook
+- browse
+
+To demo and test the component, change directory to that of the component - e.g.:
+> cd sort
+
+To do a simple run on the "jdi" component core ( where this exists):
+> python jdi.py
+
+To run unittest tests on the component:
+> python -m unittest discover
+
+
+
+
+-------------------------------------------------------------------------------
+APPENDIX - Notes on Concepts and Design
+-------------------------------------------------------------------------------
+
+
+
+DESCRIPTION
+
+Directories and Files
+
+Comments on individual components and supporting modules are provided in the corresponding files.  
+
+This document provides an overview.
+
+A library of examples of functions and classes to support components is provided in:
+- components/lib/pplUtils.py
+
+A library of unittest sub-classes to support testing of certain classes of components is provided in:
+- components/lib/pplTest.py
+
+In the other sub-directories of the top-level components directory, various components are
+developed.  The following have been developed to support the demos:
+- initStreamStub;
+- cook;
+- sort;
+- rollup;
+- browse;
+- serve.
+
+The following directory provides an example of development of pipelines on the local machine (see below):
+- playpen
+
+The following directory provides a library function to invoke a pipeline of components as processes.
+- pplPyLib
+
+
+
+Key Concepts
+
+Currently, a system is developed as one or more workflows.
+
+Each workflow consists of a single pipeline of components.
+
+Each pair of components in the pipeline is connected by a stream.
+
+Each component behaves as follows:
+- reads its entire input stream from standard input; 
+- performs some function specific to the component;
+- writes  its output stream to standard output.
+
+( Note that the partial reading of the stream is not supported, as is the case in a conventional UNIX or DOS pipeline. It will be noted that this makes the setup equivalent to invoking the stages of the computations in turn. This feature will be used in future versions to "compile" a pipeline, thus improving certain performance characteristics - e.g. avoiding the memory access associated with reading and writing pipelines. )
+
+
+Data in the Pipelines
+
+The data in the pipeline is structured as a set of tabs labelled with tags.  This is directly analagous to a filing system or an Excel Workbook.
+
+It is envisaged that future versions will support the concept of a profile for each tab.  For csv data, for example, this will define the header for each column of data and a set of validation functions to be applied to the data.  This is not supported in the current version.
+
+
+Components
+
+Each component has three parameters:
+- tag for the tab with the input data;
+- parameters for the component to control its behaviour - e.g. columns to sort by;
+- tag for the tab with the output data.
+
+Where parameters are not needed they are ignored.  It is good to set the value to "None".
+
+Each component is supplied as a single stand-alone directory.  It contains a file __main__.py which is invoked when the directory is invoked by name.  For example:
+python cook None myfile.csv data
+
+Some component directories provide components based exclusively on classes from the PPL utility library:
+- components\lib\pplUtils.py: 
+	class pplComponentCook
+	class pplComponentServe
+	class pplComponentBrowse
+
+The following class is simple and implemented exclusivel within its sub-directory - see below for details:
+	initStreamStub
+
+Other component directories provide components where component specific functionality is provided in the form of a "jdi" (just do it) function in file jdi.py.  
+
+These functions take the following parameters:
+- a list of lines of input - corresponding to the lines read from the stream in the specified tab;
+- a parameter string - corresponding to the parameter string from the component invocation.
+
+The functions produce the following output:
+- a list of lines of output to be written to the stream in a tab with the tag specified.
+
+A Marshalling Class reads the lines from the input stream, extracts the data from the specified input tab, invokes the jdi function, constructs an output data set with output lines in the specified outpput tab and write the lines to the output stream.  Currently, one marshalling class is provided:
+- components\lib\pplUtils.py:  
+	- class pplComponentCsvFilter
+
+The pplComponentCsvFilter class is a sub-class of pplComponent specialised for csv files.  The pplComponent class provides utility functions supported by a component specific error handing and logging infrastructure.  ( Consideration will be given to whether a test infrastructure can or should be provided in this class, replacing the current implementation of testing using the standard unittest module.
+
+
+Streams
+
+Streams are initiated by the initStreamStub component or by reading an equivalent file.
+
+Data is added to the stream via the cook component.
+
+When the workflow provides a web service, the standard output of the final component is read and returned to the client.
+
+When used on the command line, the standard output of the final component is written to the terminal.
+
+In the playpen environment, each stage in the workflow is represented by a file with a numerical prefix and a .ppl extension.  Running the ppl.bat script on each ppl file in turn cause a script to be invoked which parses the filename to invoke a component command with a .txt file with the corresponding prefix as its input and a .txt file with the incremented prefix as its output.  (To adds amusement, set up a file association to allow operation by double clicking each file in turn.)  The playpen allows user development of pipelines on the local machine with opportunity to examine the inputs and outputs at each stage.
+
+
+Component Tests
+
+Testing of components takes place at a number of levels.
+
+Each jdi.py file contains code to run the component with simple input data and output the result to standard output.  This is invoked in the components directory as:
+- prompt> python jdi.py
+
+In order to run the unittest, go to the components directory and invoke:
+- prompt> python -m unittest discover
+
+Unit tests are provided, as appropriate, as follows:
+- a direct test of the inputs and outputs from the jdi function in jdi.py;
+- a test of the component including its marshalling class, streaming data into and out of the component.
+
+
+Key Limitations
+
+- Single Chunk - ie each component processes just one block of data and there is no parallelism
+
+- No "uncook" component to take tab from the stream and create a file
+
+- No script to process the pipeline script and produce an implementation which passes the data between components by reference, rather than streaming it through a pipeline.
+
+- Limited error handling of limited elegance
+
+- Testing can be built out improved.
+
+- The process of component installation has not been developed.
+
+- Many more components can be developed and a process for component documentation and discovery will be needed.
+
